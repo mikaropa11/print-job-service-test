@@ -99,7 +99,7 @@ When the retry budget is exhausted, or a non-transient error occurs, the job is 
 the error reason is persisted. The renderer's delay and transient-failure rate are configurable so
 the policy can be exercised locally without changing business logic.
 
-### Readiness checks
+#### Readiness checks
 `/health/ready`
   performs a lightweight database query and returns `503 Service Unavailable` when PostgreSQL cannot
   be reached, preventing traffic from being routed to an instance that cannot read or persist jobs.
