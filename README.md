@@ -93,33 +93,72 @@ never on the HTTP request thread; PostgreSQL is the durable source of truth for 
 #### Retry policy
 
 Only `TransientRenderingException` is retryable. A job receives up to three retries, with a 
-30-second `nextAttemptAt` backoff between attempts.
+30-second `nextAttemptAt` backoff between attempts. Between this time, the worker will keep polling 
+for other jobs to process.
 When the retry budget is exhausted, or a non-transient error occurs, the job is marked `FAILED` and
 the error reason is persisted. The renderer's delay and transient-failure rate are configurable so
 the policy can be exercised locally without changing business logic.
 
-### Readiness and liveness and metrics
-
-`/health/live` only indicates that the process and HTTP server are responsive. `/health/ready`
-performs a lightweight database query and returns `503 Service Unavailable` when PostgreSQL cannot
-be reached, preventing traffic from being routed to an instance that cannot read or persist jobs.
-`/metrics` returns a JSON object with job counts by status, e.g.:
-```json
-{
-  "QUEUED": 3,
-  "PROCESSING": 1,
-  "DONE": 5,
-  "FAILED": 2
-}
-```
+### Readiness checks
+`/health/ready`
+  performs a lightweight database query and returns `503 Service Unavailable` when PostgreSQL cannot
+  be reached, preventing traffic from being routed to an instance that cannot read or persist jobs.
 
 
 ### Optional (not required to complete the exercise)
 
 - Demonstrate that running two instances of your app against the same database does not cause a
   job to be processed twice.
+  - The worker uses an atomic database claim, so multiple instances sharing PostgreSQL cannot claim the same job.
 - A Kubernetes `Deployment`/`Service` manifest for this app (it does not need to be applied to a
   real cluster - we're interested in the manifest itself, e.g. how you wire up probes).
+  - The `k8s/` directory contains all manifests required to deploy the application and PostgreSQL,
+    including secrets, services, persistent storage, and health probes.
+
+### API Documentation
+- Get job status: `GET /jobs/{id}`   
+    
+    Returns the current status of a job:
+    
+    For a failed job, errorMessage contains the failure reason. An unknown job id returns
+    404 Not Found.
+
+- List jobs: `GET /jobs` 
+    
+    Returns all jobs using the same summary representation as job submission.
+    
+    An optional status filter is supported:
+
+   `GET /jobs?status=FAILED`
+    
+    Valid values are QUEUED, PROCESSING, DONE, and FAILED. An invalid status returns
+    400 Bad Request.
+
+- Fetch a rendered result: `GET /jobs/{id}/result`
+
+    For a completed job, returns:
+    
+    {
+    "result": "Rendered output for job 78ab47d1-211d-4b91-ad8e-8ed2b6615e6d"
+    }
+    
+    Responses:
+    
+    - 200 OK when the job is DONE.
+    - 409 Conflict when the job is still QUEUED or PROCESSING.
+    - 422 Unprocessable Entity when the job is FAILED.
+    - 404 Not Found when the job id does not exist.
+    
+- Operational endpoints
+
+    - `GET /health/live`
+      Returns `200 OK` with `{"status":"UP"}` when the process is alive.
+
+    - `GET /health/ready`
+      Returns `200 OK` when the database is reachable, or `503 Service Unavailable` otherwise.
+
+    - `GET /metrics`
+      Returns job counts grouped by status, including statuses with zero jobs.
 
 ### How to run
 
