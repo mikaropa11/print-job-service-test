@@ -9,8 +9,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.List;
 
 public interface JobRepository extends JpaRepository<Job, String> {
+
+    List<Job> findAllByStatus(JobStatus status);
 
     Optional<Job> findFirstByStatusAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(JobStatus status, Instant now);
 

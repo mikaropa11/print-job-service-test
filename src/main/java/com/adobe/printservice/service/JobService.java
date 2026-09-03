@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.List;
 
 
 @Service
@@ -56,6 +57,20 @@ public class JobService {
         job.setUpdatedAt(now);
         job.setNextAttemptAt(now);
         return jobRepository.save(job);
+    }
+
+    @Transactional(readOnly = true)
+    public Job get(String jobId) {
+        return jobRepository.findById(jobId)
+                .orElseThrow(() -> new IllegalArgumentException("Job not found: " + jobId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Job> list(JobStatus status) {
+        if (status == null) {
+            return jobRepository.findAll();
+        }
+        return jobRepository.findAllByStatus(status);
     }
 
     @Transactional

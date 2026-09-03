@@ -4,7 +4,9 @@ import com.adobe.printservice.model.JobStatus;
 
 import java.time.Instant;
 
-public class JobResponseDTO {
+import com.adobe.printservice.model.Job;
+
+public class JobResponse {
 
     private String id;
 
@@ -13,6 +15,15 @@ public class JobResponseDTO {
     private Instant createdAt;
 
     private Instant updatedAt;
+
+    public static JobResponse from(Job job) {
+        JobResponse response = new JobResponse();
+        response.id = job.getId();
+        response.status = job.getStatus();
+        response.createdAt = job.getCreatedAt();
+        response.updatedAt = job.getUpdatedAt();
+        return response;
+    }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
