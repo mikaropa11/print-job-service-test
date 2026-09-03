@@ -1,6 +1,6 @@
 package com.adobe.printservice.web;
 
-import com.adobe.printservice.service.UnknownTemplateException;
+import com.adobe.printservice.exception.UnknownTemplateException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;

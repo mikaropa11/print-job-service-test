@@ -1,4 +1,4 @@
-package com.adobe.printservice.service;
+package com.adobe.printservice.exception;
 
 public class UnknownTemplateException extends RuntimeException {
 

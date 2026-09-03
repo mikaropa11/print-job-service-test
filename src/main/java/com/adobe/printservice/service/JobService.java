@@ -1,5 +1,6 @@
 package com.adobe.printservice.service;
 
+import com.adobe.printservice.exception.UnknownTemplateException;
 import com.adobe.printservice.model.Job;
 import com.adobe.printservice.model.JobStatus;
 import com.adobe.printservice.repository.JobRepository;
