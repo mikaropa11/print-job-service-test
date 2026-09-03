@@ -1,5 +1,6 @@
 package com.adobe.printservice.service;
 
+import com.adobe.printservice.exception.JobResultUnavailableException;
 import com.adobe.printservice.exception.UnknownTemplateException;
 import com.adobe.printservice.exception.TransientRenderingException;
 import com.adobe.printservice.model.Job;
@@ -71,6 +72,15 @@ public class JobService {
             return jobRepository.findAll();
         }
         return jobRepository.findAllByStatus(status);
+    }
+
+    @Transactional(readOnly = true)
+    public String getResult(String jobId) {
+        Job job = get(jobId);
+        if (job.getStatus() != JobStatus.DONE) {
+            throw new JobResultUnavailableException(job.getStatus());
+        }
+        return job.getResultContent();
     }
 
     @Transactional

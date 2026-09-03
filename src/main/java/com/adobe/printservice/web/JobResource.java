@@ -5,6 +5,7 @@ import com.adobe.printservice.model.JobStatus;
 import com.adobe.printservice.service.JobService;
 import com.adobe.printservice.web.dto.JobResponse;
 import com.adobe.printservice.web.dto.JobStatusResponse;
+import com.adobe.printservice.web.dto.ResultResponse;
 import com.adobe.printservice.web.dto.SubmitJobRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -49,5 +50,10 @@ public class JobResource {
     @GetMapping
     public List<JobResponse> listJobs(@RequestParam(required = false) JobStatus status) {
         return jobService.list(status).stream().map(JobResponse::from).toList();
+    }
+
+    @GetMapping("/{id}/result")
+    public ResultResponse getResult(@PathVariable String id) {
+        return new ResultResponse(jobService.getResult(id));
     }
 }
