@@ -2,6 +2,7 @@ package com.adobe.printservice.web;
 
 import com.adobe.printservice.exception.UnknownTemplateException;
 import com.adobe.printservice.exception.JobResultUnavailableException;
+import com.adobe.printservice.exception.DatabaseUnavailableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -35,5 +36,10 @@ public class ApiExceptionHandler {
                 ? HttpStatus.UNPROCESSABLE_CONTENT
                 : HttpStatus.CONFLICT;
         return ProblemDetail.forStatusAndDetail(status, exception.getMessage());
+    }
+
+    @ExceptionHandler(DatabaseUnavailableException.class)
+    ProblemDetail handleDatabaseUnavailable(DatabaseUnavailableException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
     }
 }
