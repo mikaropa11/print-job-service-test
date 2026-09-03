@@ -81,6 +81,38 @@ need to build template management. Your job is to implement the render job lifec
 We're not going to tell you how to implement the queue/worker, the retry policy, or what your
 readiness check should verify - that's for you to decide.
 
+### Design Decisions
+
+#### Queue and worker
+
+Jobs are stored in PostgreSQL and processed by a scheduled background worker. The worker polls
+for eligible `QUEUED` jobs and atomically claims one before rendering it, so two application
+instances sharing the database cannot claim the same job. Rendering happens after the claim and
+never on the HTTP request thread; PostgreSQL is the durable source of truth for job state.
+
+#### Retry policy
+
+Only `TransientRenderingException` is retryable. A job receives up to three retries, with a 
+30-second `nextAttemptAt` backoff between attempts.
+When the retry budget is exhausted, or a non-transient error occurs, the job is marked `FAILED` and
+the error reason is persisted. The renderer's delay and transient-failure rate are configurable so
+the policy can be exercised locally without changing business logic.
+
+### Readiness and liveness and metrics
+
+`/health/live` only indicates that the process and HTTP server are responsive. `/health/ready`
+performs a lightweight database query and returns `503 Service Unavailable` when PostgreSQL cannot
+be reached, preventing traffic from being routed to an instance that cannot read or persist jobs.
+`/metrics` returns a JSON object with job counts by status, e.g.:
+```json
+{
+  "QUEUED": 3,
+  "PROCESSING": 1,
+  "DONE": 5,
+  "FAILED": 2
+}
+```
+
 
 ### Optional (not required to complete the exercise)
 
